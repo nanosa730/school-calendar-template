@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>授業の時間割をカレンダーへ</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#1f3a5f; --board-2:#2f5281; --chalk:#f4f7fb; --ink:#1e2a38;
+  --line:#d9e2ec; --page:#f8fafc; --muted:#52606d; --lesson:#2f6f8f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;line-height:1.6}
+header{background:linear-gradient(160deg,#2a4a74,#172f4f);color:var(--chalk);padding:20px 20px 22px}
+.wrap{max-width:760px;margin:0 auto}
+.back{color:var(--chalk);font-size:.9rem;font-weight:700;opacity:.9}
+h1{margin:6px 0 0;font-size:1.6rem;letter-spacing:.04em}
+h1 small{display:block;font-size:.95rem;font-weight:400;opacity:.85;margin-top:4px}
+.pick{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick label{font-weight:700}
+.pick select{font:inherit;font-size:1.1rem;font-weight:700;padding:8px 12px;border-radius:8px;border:2px solid #fff;min-width:220px;max-width:100%}
+.tabs{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
+.tab{font:inherit;font-weight:700;font-size:1rem;padding:8px 18px;border:none;border-radius:8px 8px 0 0;background:var(--board-2);color:var(--chalk);cursor:pointer}
+.tab[aria-selected=true]{background:var(--chalk);color:var(--board)}
+:focus-visible{outline:3px solid #7aa7e0;outline-offset:2px}
+main{padding:8px 20px 40px}
+.empty{padding:30px 0;text-align:center;color:var(--muted);font-weight:700}
+.day{display:grid;grid-template-columns:5.2rem 1fr;column-gap:10px;border-bottom:1px solid var(--line);padding:10px 0}
+.date{font-weight:700;font-size:1.35rem;line-height:1.1;white-space:nowrap}
+.date span{display:block;font-size:.8rem;font-weight:400;color:var(--muted)}
+.ls{display:grid;grid-template-columns:96px 1fr;gap:2px 10px;align-items:baseline}
+.ls .t{font-size:.85rem;color:var(--muted);white-space:nowrap}
+.ls .n{font-weight:700}
+.ls .n small{font-weight:400;font-size:.8rem;color:var(--muted);margin-left:6px}
+.ls .n small.sw{color:#a35a00;font-weight:700}
+.none{color:var(--muted);font-size:.9rem}
+.note{margin:12px 0 0;padding:8px 12px;background:#eaf1f9;border-radius:8px;font-size:.9rem}
+.box{margin-top:16px;border:2px solid var(--board);border-radius:10px;padding:14px 18px;background:#fff}
+.box h2{font-size:1.05rem;margin:0 0 6px}
+.box p{margin:4px 0;font-size:.92rem}
+.box.sub{border-color:#e8a317;background:#fffbf0}
+.box.sub code{display:block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:4px 0;word-break:break-all;user-select:all;font-size:.85rem}
+.sbtn{display:block;text-align:center;text-decoration:none;font-weight:700;padding:11px 8px;border-radius:8px;color:#fff;background:var(--board);margin-top:8px}
+.btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}
+.go{background:var(--board);color:var(--chalk);border:none;border-radius:8px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;width:100%}
+.go2{background:#fff;color:var(--board);border:1.5px solid var(--board);border-radius:8px;padding:9px 14px;font:inherit;font-size:.92rem;font-weight:700;cursor:pointer;width:100%}
+.go:disabled,.go2:disabled{opacity:.5;cursor:not-allowed}
+.line{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+.line select{font:inherit;padding:6px 8px;border:1.5px solid var(--board);border-radius:6px;min-width:220px;max-width:100%}
+.login{display:inline-flex;align-items:center;gap:10px;margin-top:6px;background:#fff;color:#1f1f1f;border:1px solid #747775;border-radius:999px;
+  padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
+.login:hover{background:#f2f6fc}
+.login svg{width:20px;height:20px}
+.linkbtn{background:none;border:none;color:var(--board-2);text-decoration:underline;font:inherit;font-size:.9rem;cursor:pointer;padding:0}
+#msg{margin-top:10px;font-weight:700;color:var(--board)}
+#msg:empty{display:none}
+#msg.ng{color:#a32020}
+.open{display:block;margin:8px 0 4px;padding:12px 16px;background:#e8a317;color:#1e2a38!important;
+  text-align:center;text-decoration:none;font-weight:700;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.open::after{content:" ↗"}
+.open[hidden]{display:none}
+.help{margin-top:24px;border:2px solid var(--board);border-radius:10px;padding:14px 18px}
+.help h2{font-size:1.05rem;margin:0 0 6px}
+.help h3{font-size:.95rem;margin:12px 0 4px}
+.help ol,.help ul{margin:0;padding-left:1.3em}
+[hidden]{display:none!important}
+@media (max-width:520px){ .day{grid-template-columns:4.2rem 1fr} .date{font-size:1.1rem} .ls{grid-template-columns:84px 1fr} .box{padding:12px} }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="back" href="./">← 行事予定のページへ戻る</a>
+  <h1>授業の時間割をGoogleカレンダーへ<span id="trial"></span><small id="ver"></small></h1>
+  <div class="pick">
+    <label for="who-sel">先生の名前</label>
+    <select id="who-sel"><option value="">選んでください</option></select>
+  </div>
+  <div class="tabs" id="tabs" role="tablist" hidden></div>
+</div></header>
+
+<main class="wrap">
+  <p class="empty" id="first">上で自分の名前を選ぶと、月ごとの授業が表示されます。</p>
+
+  <div id="body" hidden>
+    <div id="list"></div>
+    <p class="note" id="special"></p>
+
+    <section class="box" id="dest">
+      <h2>Googleカレンダーに登録する（個人のアカウント）</h2>
+      <div id="signedOut">
+        <p>ログインすると、授業を自分のカレンダーに入れられます。入れた授業は、自分で動かしたり消したりできます。<br>
+        <b>ログインできないアカウントのときは、下の「購読」か「.ics で保存」を使ってください。</b></p>
+        <button class="login" id="login"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.380 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.570-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Googleでログイン</button>
+        <p class="note" id="inapp" hidden>LINE などのアプリの中で開いているため、Googleにログインできません。メニューから「ブラウザで開く」を選んで、Safari や Chrome で開き直してください。</p>
+      </div>
+      <div id="signedIn" hidden>
+        <p>ログイン中：<b id="who"></b>　<button class="linkbtn" id="switch">別のアカウントにする</button></p>
+        <div class="line"><span>登録先</span><select id="to"></select></div>
+        <div class="btns">
+          <button class="go" id="goMonth">この月を登録する</button>
+          <button class="go" id="goAll">すべての月をまとめて登録する</button>
+        </div>
+        <p style="font-size:.88rem;margin-top:8px">行事予定が変わったときは、もう一度押すと最新の内容に入れ直します。<b>自分で動かした授業・消した授業はそのまま</b>にします。</p>
+      </div>
+      <div id="msg" role="status"></div>
+      <a class="open" id="openCal" hidden href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener">Googleカレンダーを開いて確かめる</a>
+    </section>
+
+    <section class="box sub">
+      <h2>ログインできないときは、どちらかを選んでください</h2>
+      <h3 style="font-size:.98rem;margin:10px 0 2px">A. 購読する（授業は動かせないが、変更は自動で反映）</h3>
+      <p>ボタンを押して「追加」を押すだけです。行事予定が変わったり、1月以降が増えたりしても、自動で直ります（半日〜1日遅れ）。</p>
+      <a class="sbtn" id="feedBtn" target="_blank" rel="noopener">自分の授業を購読する</a>
+      <details style="margin-top:8px;font-size:.9rem"><summary style="cursor:pointer;font-weight:700;color:var(--board-2)">ボタンでうまくいかないとき</summary>
+        パソコンの Googleカレンダーで、左の「他のカレンダー」の「＋」→「URL で追加」に、次の URL を貼り付けます。<code id="feedUrl"></code>
+        スマホのアプリでは追加できません。一度パソコンで追加すると、スマホにも表示されます。
+      </details>
+      <h3 style="font-size:.98rem;margin:14px 0 2px">B. .ics ファイルを読み込む（授業を自分で動かせる）</h3>
+      <p>行事予定が変わったときは、自分で直すか、その月の分を読み込み直してください。</p>
+      <div class="btns">
+        <button class="go2" id="icsMonth">この月を .ics で保存</button>
+        <button class="go2" id="icsAll">すべての月を .ics で保存</button>
+      </div>
+      <a class="open" href="https://calendar.google.com/calendar/r/settings/export" target="_blank" rel="noopener">Googleカレンダーの読み込み画面を開く</a>
+      <p class="note">A と B（または上のログイン登録）を両方使うと、授業が2つずつ表示されます。どれか1つにしてください。</p>
+    </section>
+
+    <div class="help">
+      <h2>使い方・注意</h2>
+      <h3>.ics ファイルの読み込み方（パソコンで）</h3>
+      <ol>
+        <li>「この月を .ics で保存」を押します。ファイルがダウンロードされます。</li>
+        <li>「Googleカレンダーの読み込み画面を開く」を押します（自分で開くときは、右上の歯車 →「設定」→ 左の「インポート/エクスポート」）。</li>
+        <li>「パソコンからファイルを選択」で保存したファイルを選び、「カレンダーに追加」で入れ先を選んで「インポート」を押します。</li>
+      </ol>
+      <p class="note">.ics ファイルをダブルクリックすると Outlook が開いてしまいます。必ず上の手順で読み込んでください。授業だけのカレンダーを作っておくと、あとでまとめて消せて便利です（左の「他のカレンダー」の「＋」→「新しいカレンダーを作成」）。</p>
+      <h3>どう作っているか</h3>
+      <ul>
+        <li>教科担任別時間割に、行事予定表の「時間帯」（A帯・B帯・B15）と「授業」欄の振替・授業なしを当てはめています。</li>
+        <li>学年の行事（講演会・保護者会など）の時間は、その学年の授業だけを入れていません。</li>
+        <li>☆（特別日課）の日は時程が分からないため、授業を入れていません。</li>
+        <li>空き時間は入れていません。個人的な時間割変更は反映されないので、登録した後で自分で動かしてください。</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:16px;font-size:.85rem;text-align:center"><a href="privacy.html" style="color:var(--board-2)">プライバシーポリシー</a></p>
+</main>
+
+<script src="config.js"></script>
+<script src="jikanwari_data.js"></script>
+<script src="nikka.js"></script>
+<script src="jikanwari_core.js"></script>
+<script>
+const C = Jikanwari.CONFIG;
+const CLIENT_ID = C.clientId;
+const IN_APP = /Line\/|FBAN|FBAV|Instagram|MicroMessenger|KAKAOTALK/i.test(navigator.userAgent);
+const CAL_NAME = C.short + " 授業";
+const FEED_BASE = C.siteHost + "/feeds/t/";
+const J = Jikanwari, WD = "日月火水木金土";
+const $ = id => document.getElementById(id);
+const store = {get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }};
+
+document.title = `${C.short} 授業の時間割をカレンダーへ${C.trial}`;
+$("trial").textContent = C.trial;
+$("ver").textContent = `${C.short}　時間割 ${J.TIMETABLE_VERSION}・行事予定 ` + J.MONTHS.map(m=>`${m}月${J.NIKKA_VERSION[m]||""}`).join("、");
+const sel = $("who-sel");
+J.TEACHERS.forEach(t=>sel.add(new Option(t.home ? `${t.name}（${t.home}担任）` : t.name, t.id)));
+
+let teacher = null, data = null, cur = J.MONTHS[0];
+const tabs = $("tabs");
+J.MONTHS.forEach(m=>{
+  const b = document.createElement("button"); b.className = "tab"; b.textContent = `${m}月`; b.dataset.m = m;
+  b.setAttribute("role","tab"); b.onclick = ()=>{ cur = m; show(); }; tabs.appendChild(b);
+});
+
+function pick(id){
+  teacher = J.TEACHERS.find(t=>t.id===id) || null;
+  $("first").hidden = !!teacher; $("body").hidden = !teacher; tabs.hidden = !teacher;
+  say(""); $("openCal").hidden = true;
+  if(!teacher) return;
+  store.set("jikanwari-teacher", id);
+  data = J.lessonsFor(teacher);
+  const url = FEED_BASE + teacher.id + ".ics";
+  $("feedBtn").href = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent("webcal://" + url);
+  $("feedUrl").textContent = "https://" + url;
+  show();
+}
+sel.onchange = ()=>pick(sel.value);
+
+function show(){
+  if(!teacher) return;
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", +x.dataset.m===cur));
+  const list = $("list"); list.innerHTML = "";
+  const ls = data.lessons.filter(x=>x.m===cur);
+  const days = Object.keys(J.NIKKA).filter(k=>+k.split("/")[0]===cur);
+  for(const key of days){
+    const d = +key.split("/")[1], items = ls.filter(x=>x.d===d);
+    const box = document.createElement("section"); box.className = "day";
+    const wd = WD[new Date(cur>=4?C.fiscalYear:C.fiscalYear+1, cur-1, d).getDay()];
+    let inner;
+    if(J.NIKKA[key][0]==="☆") inner = `<span class="none">特別日課（☆）のため、授業は入れていません</span>`;
+    else if(!items.length) inner = `<span class="none">授業なし</span>`;
+    else inner = `<div class="ls">` + items.map(x=>{
+      const sw = x.memo.match(/振替（(.+)）/);
+      return `<span class="t">${x.start}〜${x.end}</span><span class="n">${esc(x.title)}${sw ? `<small class="sw">${esc(sw[1])}</small>` : ""}</span>`;
+    }).join("") + `</div>`;
+    box.innerHTML = `<div class="date">${cur}/${d}<span>(${wd})</span></div><div>${inner}</div>`;
+    list.appendChild(box);
+  }
+  const n = ls.length;
+  $("special").textContent = `${cur}月の授業は${n}コマです。` + (data.special.length ? `☆（特別日課）の日（${data.special.join("、")}）は、時程が分かりしだい追加します。` : "");
+  $("goMonth").textContent = `${cur}月の授業を登録する（${n}コマ）`;
+  $("goAll").textContent = `すべての月をまとめて登録する（${data.lessons.length}コマ）`;
+  $("icsMonth").textContent = `${cur}月を .ics で保存`;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function say(text, ng){ $("msg").className = ng ? "ng" : ""; $("msg").textContent = text; }
+
+// ---- .ics で保存 ----
+function saveIcs(all){
+  const ls = all ? data.lessons : data.lessons.filter(x=>x.m===cur);
+  const name = all ? `${J.MONTHS[0]}〜${J.MONTHS[J.MONTHS.length-1]}月` : `${cur}月`;
+  const blob = new Blob([J.buildIcs(ls)], {type:"text/calendar;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${C.short}_授業_${teacher.name}_${name}.ics`;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+$("icsMonth").onclick = ()=>saveIcs(false);
+$("icsAll").onclick = ()=>saveIcs(true);
+
+// ---- Googleにログインして登録 ----
+const CAL = "https://www.googleapis.com/calendar/v3";
+const SCOPES = ["https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar.app.created"];
+let token = null, tokenClient = null, cals = [], pending = null, busy = false;
+if(!CLIENT_ID) $("dest").hidden = true;
+if(IN_APP){ $("inapp").hidden = false; $("login").disabled = true; }
+
+window.gisLoaded = ()=>{
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPES.join(" "),
+    callback: async r=>{
+      if(r.error){ say("ログインできませんでした：" + r.error, true); return; }
+      if(!google.accounts.oauth2.hasGrantedAllScopes(r, ...SCOPES)){
+        say("カレンダーへのアクセスが一部しか許可されていません。もう一度ログインして、すべてにチェックを入れてください。", true); return;
+      }
+      token = r.access_token;
+      try{ await loadCals(); }catch(err){ say(err.message, true); return; }
+      if(pending){ const all = pending.all; pending = null; sync(all); }
+    },
+    error_callback: e=>{ if(e.type!=="popup_closed") say("ログイン画面を開けませんでした。ポップアップを許可するか、Safari や Chrome で開き直してください。", true); }
+  });
+};
+function login(prompt){
+  if(IN_APP){ say("アプリの中ではログインできません。Safari や Chrome で開き直してください。", true); return; }
+  if(!tokenClient){ say("ログインの準備中です。数秒たってから、もう一度押してください。", true); return; }
+  tokenClient.requestAccessToken(prompt ? {prompt} : {});
+}
+$("login").onclick = ()=>login();
+$("switch").onclick = ()=>{ if(token) google.accounts.oauth2.revoke(token, ()=>{}); token = null; showSignedIn(false); login("select_account"); };
+function showSignedIn(on){ $("signedIn").hidden = !on; $("signedOut").hidden = on; }
+$("goMonth").onclick = ()=>token ? sync(false) : (pending = {all:false}, login());
+$("goAll").onclick = ()=>token ? sync(true) : (pending = {all:true}, login());
+
+async function api(path, opt={}){
+  for(let tries = 0; ; tries++){
+    const res = await fetch(CAL + path, {method: opt.method || "GET",
+      headers: {Authorization: "Bearer " + token, "Content-Type": "application/json"},
+      body: opt.body ? JSON.stringify(opt.body) : undefined});
+    if(res.status===401){ token = null; showSignedIn(false); throw new Error("ログインの有効期限が切れました。もう一度ログインしてください。"); }
+    if((res.status===403 || res.status===429) && tries < 4){ await new Promise(r=>setTimeout(r, 1500 * (tries+1))); continue; } // 回数制限：少し待ってやり直す
+    const body = res.status===204 ? {} : await res.json().catch(()=>({}));
+    if(!res.ok){ const e = new Error((body.error && body.error.message) || ("エラー " + res.status)); e.status = res.status; throw e; }
+    return body;
+  }
+}
+async function loadCals(){
+  const r = await api("/users/me/calendarList?minAccessRole=writer&maxResults=250");
+  const items = r.items || [], primary = items.find(c=>c.primary);
+  cals = [...(primary ? [primary] : []), ...items.filter(c=>!c.primary)];
+  $("who").textContent = primary ? primary.id : "";
+  const to = $("to"), before = to.value; to.innerHTML = "";
+  const same = cals.find(c=>c.summary===CAL_NAME);
+  if(!same) to.add(new Option(`新しく作る「${CAL_NAME}」（おすすめ）`, "new"));
+  cals.forEach(c=>to.add(new Option(c.primary ? `${c.summaryOverride||c.summary}（メイン）` : (c.summaryOverride||c.summary), c.id)));
+  to.value = same ? same.id : ([...to.options].some(o=>o.value===before) ? before : "new");
+  showSignedIn(true);
+}
+
+const pad = n => String(n).padStart(2,"0");
+function bodyOf(x){
+  const day = `${x.y}-${pad(x.m)}-${pad(x.d)}`;
+  return {id: x.id, summary: x.title, description: x.memo + "\n" + J.footer(),
+    start: {dateTime: `${day}T${x.start}:00`, timeZone: "Asia/Tokyo"},
+    end: {dateTime: `${day}T${x.end}:00`, timeZone: "Asia/Tokyo"},
+    extendedProperties: {private: {scal: "jikanwari", t: x.title, s: `${day}T${x.start}`, e: `${day}T${x.end}`}}};
+}
+// 登録したときのまま（本人が動かしたり名前を変えたりしていない）か
+function untouched(ev){
+  const p = (ev.extendedProperties && ev.extendedProperties.private) || {};
+  const at = v => v && v.dateTime ? new Date(/[Zz]|[+-]\d\d:\d\d$/.test(v.dateTime) ? v.dateTime : v.dateTime + "+09:00").getTime() : NaN;
+  return p.scal==="jikanwari" && ev.summary===p.t && at(ev.start)===new Date(p.s + ":00+09:00").getTime() && at(ev.end)===new Date(p.e + ":00+09:00").getTime();
+}
+
+// 登録・入れ直し。この先生の授業（id が sj{先生id} で始まる予定）だけを扱う
+async function sync(all){
+  if(busy) return;
+  const ls = all ? data.lessons : data.lessons.filter(x=>x.m===cur);
+  if(!ls.length){ say("この月に登録する授業はありません。"); return; }
+  busy = true; ["goMonth","goAll"].forEach(id=>$(id).disabled = true); $("openCal").hidden = true; say("確認しています…");
+  let added = 0, kept = 0, removed = 0, skipped = 0, step = 0;
+  try{
+    let calId = $("to").value;
+    if(calId==="new"){
+      const found = cals.find(c=>c.summary===CAL_NAME);
+      calId = found ? found.id : (await api("/calendars", {method:"POST", body:{summary:CAL_NAME, timeZone:"Asia/Tokyo"}})).id;
+    }
+    const base = `/calendars/${encodeURIComponent(calId)}/events`;
+    const months = all ? J.MONTHS : [cur];
+    const ymOf = m => [m>=4?C.fiscalYear:C.fiscalYear+1, m];
+    const [y1,m1] = ymOf(months[0]), [y2,m2] = ymOf(months[months.length-1]);
+    const timeMin = `${y1}-${pad(m1)}-01T00:00:00+09:00`, end = new Date(y2, m2, 1);
+    const timeMax = `${end.getFullYear()}-${pad(end.getMonth()+1)}-01T00:00:00+09:00`;
+    const prefix = "sj" + teacher.id, want = new Map(ls.map(x=>[x.id, x])), existing = [];
+    let pageToken = "";
+    do{
+      const q = new URLSearchParams({timeMin, timeMax, showDeleted:"true", singleEvents:"true", maxResults:"2500"});
+      if(pageToken) q.set("pageToken", pageToken);
+      const r = await api(`${base}?${q}`);
+      existing.push(...(r.items||[]).filter(ev=>ev.id.startsWith(prefix)));
+      pageToken = r.nextPageToken || "";
+    }while(pageToken);
+
+    const total = existing.length + ls.length;
+    const progress = ()=>say(`登録しています… ${++step}/${total}`);
+    for(const ev of existing){
+      progress();
+      const x = want.get(ev.id);
+      if(ev.status==="cancelled"){
+        // 消された授業：このページが消したもの（del=1）で、また必要になったものだけ戻す。本人が消したものは戻さない
+        const p = (ev.extendedProperties && ev.extendedProperties.private) || {};
+        if(x && p.del==="1"){ await api(`${base}/${ev.id}`, {method:"PUT", body:{...bodyOf(x), status:"confirmed"}}); added++; }
+        else if(x) skipped++;
+        if(x) want.delete(ev.id);
+        continue;
+      }
+      if(x){ want.delete(ev.id); kept++; continue; }            // 今も同じ授業
+      if(!untouched(ev)){ kept++; continue; }                     // 本人が動かした授業はそのまま
+      await api(`${base}/${ev.id}`, {method:"PATCH", body:{extendedProperties:{private:{del:"1"}}}});
+      await api(`${base}/${ev.id}`, {method:"DELETE"}); removed++; // 行事予定の変更でなくなった授業
+    }
+    for(const x of want.values()){
+      progress();
+      try{ await api(base, {method:"POST", body: bodyOf(x)}); added++; }
+      catch(err){ if(err.status===409) skipped++; else throw err; }
+    }
+    const parts = [`${added}コマを登録しました。`];
+    if(kept) parts.push(`${kept}コマは登録済みです。`);
+    if(removed) parts.push(`行事予定の変更でなくなった${removed}コマを消しました。`);
+    if(skipped) parts.push(`自分で消した${skipped}コマは入れていません。`);
+    say(parts.join(""));
+    $("openCal").hidden = false;
+  }catch(err){
+    say(`途中で止まりました（${added}コマ登録済み）：${err.message}　もう一度押すと、続きから登録します。`, true);
+  }finally{
+    busy = false; ["goMonth","goAll"].forEach(id=>$(id).disabled = false);
+    if(token) await loadCals().catch(()=>{});
+  }
+}
+
+const saved = store.get("jikanwari-teacher");
+if(saved && J.TEACHERS.some(t=>t.id===saved)){ sel.value = saved; pick(saved); }
+</script>
+<script>if(CLIENT_ID){ const s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.onload=()=>gisLoaded(); document.head.appendChild(s); }</script>
+</body>
+</html>

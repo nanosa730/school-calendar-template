@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プライバシーポリシー</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f8fafc;color:#1e2a38;font-family:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;line-height:1.8}
+header{background:linear-gradient(160deg,#2a4a74,#172f4f);color:#f4f7fb;padding:24px 20px}
+.wrap{max-width:760px;margin:0 auto}
+h1{margin:0;font-size:1.4rem}
+main{padding:8px 20px 40px}
+h2{font-size:1.05rem;margin:24px 0 4px;color:#1f3a5f}
+a{color:#2f5281}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>プライバシーポリシー</h1><div><span class="short"></span> 行事予定カレンダー登録</div></div></header>
+<main class="wrap">
+<p>このページ（<a class="site"></a>）は、<span class="school"></span>の職員が、学校の行事予定や授業の時間割を自分の Google カレンダーに登録するための道具です。</p>
+
+<h2>1. 使う情報</h2>
+<p>「Googleでログイン」を押して許可した場合に限り、次の情報を使います。</p>
+<ul>
+<li>カレンダーの一覧（登録先を選ぶため）</li>
+<li>登録する日の予定の名前（同じ予定を二重に登録しないため）</li>
+<li>予定の登録・入れ直しと、「<span class="short"></span> 行事」などのカレンダーの作成（利用者が選んだときだけ）</li>
+</ul>
+
+<h2>2. 情報の扱い</h2>
+<ul>
+<li>すべての処理は、利用者のブラウザと Google の間だけで行います。運営者のサーバーに情報を送ったり、保存したりすることはありません。</li>
+<li>ログインの許可（アクセストークン）は、ページを開いている間だけブラウザの中に置き、ページを閉じると消えます。</li>
+<li>集めた情報を第三者に渡すことはありません。広告や分析には使いません。</li>
+</ul>
+
+<h2>3. 許可の取り消し</h2>
+<p>Google アカウントの「<a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">サードパーティ製のアプリとサービス</a>」から、いつでも許可を取り消せます。</p>
+
+<h2>4. Google API の利用について</h2>
+<p>このページが Google API から受け取った情報の使用は、<a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API サービスのユーザーデータに関するポリシー</a>（限定使用の要件を含む）に従います。</p>
+
+<h2>5. お問い合わせ</h2>
+<p><span class="school"></span> ICT担当（校内でお問い合わせください）</p>
+
+
+</main>
+<script src="config.js"></script>
+<script>
+document.querySelectorAll(".short").forEach(x=>x.textContent=CONFIG.short);
+document.querySelectorAll(".school").forEach(x=>x.textContent=CONFIG.schoolName);
+document.querySelectorAll(".site").forEach(x=>{x.href="https://"+CONFIG.siteHost; x.textContent="https://"+CONFIG.siteHost;});
+document.title="プライバシーポリシー｜"+CONFIG.short+" 行事予定カレンダー登録";
+</script>
+</body>
+</html>

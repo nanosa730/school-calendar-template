@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>行事予定をカレンダーへ</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#1f3a5f; --board-2:#2f5281; --chalk:#f4f7fb; --ink:#1e2a38;
+  --line:#d9e2ec; --page:#f8fafc; --muted:#52606d; --yellow:#c9d8ea; --meet:#4c7a3c; --event:#b5446a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;line-height:1.6}
+header{background:linear-gradient(160deg,#2a4a74,#172f4f);color:var(--chalk);padding:28px 20px 22px}
+.wrap{max-width:760px;margin:0 auto}
+h1{margin:0;font-size:1.6rem;letter-spacing:.04em}
+h1 small{display:block;font-size:.95rem;font-weight:400;opacity:.85;margin-top:4px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.tools-label{width:100%;font-size:.85rem;font-weight:700;opacity:.95}
+.chip{border:2px solid #fff;background:#fff;color:var(--ink);
+  padding:7px 14px;border-radius:8px;font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;
+  box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.chip:hover{background:var(--chalk)}
+.chip:active{transform:translateY(1px)}
+.chip.k-m{color:#fff;background:var(--meet);border-color:#fff}
+.chip.k-e{color:#fff;background:var(--event);border-color:#fff}
+.chip.k-s{color:#fff;background:#7b5aa6;border-color:#fff}
+.chip.k-m:hover,.chip.k-e:hover,.chip.k-s:hover{filter:brightness(1.1)}
+.chip.off{background:transparent;color:#fff;border-color:rgba(255,255,255,.8);box-shadow:none}
+.chip.off:hover{background:rgba(255,255,255,.15)}
+:focus-visible{outline:3px solid #7aa7e0;outline-offset:2px}
+main{padding:8px 20px 40px}
+.day{display:grid;grid-template-columns:5.2rem 1fr;column-gap:10px;border-bottom:1px solid var(--line);padding:12px 0}
+.date{font-weight:700;font-size:1.35rem;line-height:1.1;white-space:nowrap}
+.date span{display:block;font-size:.8rem;font-weight:400;color:var(--muted)}
+.row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.row input{width:20px;height:20px;accent-color:var(--board);flex:none}
+.row label{flex:1;min-width:0;cursor:pointer}
+.title{font-weight:700}
+.meta{display:block;font-size:.85rem;color:var(--muted)}
+.tag{display:inline-block;font-size:.75rem;padding:0 6px;border-radius:4px;margin-right:6px;color:#fff;vertical-align:1px}
+.tag.m{background:var(--meet)} .tag.e{background:var(--event)} .tag.s{background:#7b5aa6}
+.tabs{display:flex;gap:6px;margin-top:18px}
+.tab{font:inherit;font-weight:700;font-size:1rem;padding:8px 18px;border:none;border-radius:8px 8px 0 0;background:var(--board-2);color:var(--chalk);cursor:pointer}
+.tab[aria-selected=true]{background:var(--chalk);color:var(--board)}
+.add{flex:none;text-decoration:none;color:var(--board);border:1.5px solid var(--board);
+  padding:5px 10px;border-radius:6px;font-size:.85rem;font-weight:700;white-space:nowrap}
+.add:hover{background:var(--board);color:var(--chalk)}
+.save{position:sticky;bottom:0;margin-top:20px;background:var(--page);border:2px solid var(--board);border-radius:10px;padding:14px 18px}
+.go{background:var(--board);color:var(--chalk);border:none;border-radius:8px;padding:12px 20px;font:inherit;font-weight:700;cursor:pointer;width:100%}
+.go:disabled{opacity:.5;cursor:not-allowed}
+#msg{margin-top:8px;font-weight:700;color:var(--board)}
+#msg.ng{color:#a32020}
+.go2{margin-top:8px;background:#fff;color:var(--board);border:1.5px solid var(--board);border-radius:8px;padding:8px 14px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;width:100%}
+.go2:disabled{opacity:.5;cursor:not-allowed}
+.sub{margin-top:16px;border:2px solid #e8a317;border-radius:10px;padding:14px 18px;background:#fffbf0}
+.sub h2{font-size:1.05rem;margin:0 0 4px}
+.sub p{margin:4px 0;font-size:.92rem}
+.sub .btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.sub a.sbtn{display:block;text-align:center;text-decoration:none;font-weight:700;padding:10px 8px;border-radius:8px;color:#fff;background:var(--board)}
+.sub a.sbtn.e{background:var(--event)} .sub a.sbtn.m{background:var(--meet)} .sub a.sbtn.s{background:#7b5aa6}
+.sub details{margin-top:10px;font-size:.9rem}
+.sub summary{cursor:pointer;font-weight:700;color:var(--board-2)}
+.sub code{display:block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:2px 0 6px;word-break:break-all;user-select:all}
+.dest{margin-top:20px;border:2px solid var(--board);border-radius:10px;padding:14px 18px;background:#fff}
+.dest h2{font-size:1.05rem;margin:0 0 8px}
+.dest p{margin:4px 0}
+.dest .line{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
+.dest select{font:inherit;padding:6px 8px;border:1.5px solid var(--board);border-radius:6px;min-width:220px;max-width:100%}
+.login{display:inline-flex;align-items:center;gap:10px;margin-top:6px;background:#fff;color:#1f1f1f;border:1px solid #747775;border-radius:999px;
+  padding:9px 18px;font:inherit;font-weight:700;cursor:pointer}
+.login:hover{background:#f2f6fc}
+.login svg{width:20px;height:20px}
+.linkbtn{background:none;border:none;color:var(--board-2);text-decoration:underline;font:inherit;font-size:.9rem;cursor:pointer;padding:0}
+#msg:empty{display:none}
+.help{margin-top:24px;border:2px solid var(--board);border-radius:10px;padding:14px 18px}
+.help h2{font-size:1.05rem;margin:0 0 6px}
+.help h3{font-size:.95rem;margin:12px 0 4px}
+.help ol{margin:0;padding-left:1.3em}
+.help a{color:var(--meet);font-weight:700}
+.open{display:block;margin:8px 0 4px;padding:12px 16px;background:#e8a317;color:#1e2a38!important;
+  text-align:center;text-decoration:none;font-weight:700;font-size:1.05rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.open:hover{filter:brightness(1.08)}
+.open::after{content:" ↗"}
+.save .open{margin-top:10px}
+.save .open[hidden]{display:none}
+.tabbar{display:flex;align-items:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.tabbar .tabs{margin-top:0}
+.tt{display:inline-flex;align-items:center;gap:4px;margin-bottom:4px;padding:7px 16px;border-radius:999px;background:#e8a317;color:#1e2a38;
+  text-decoration:none;font-weight:700;font-size:1rem;box-shadow:0 2px 6px rgba(0,0,0,.25);white-space:nowrap}
+.tt:hover{background:#f2b632}
+.warn{margin:10px 0 0;padding:8px 12px;background:#eaf1f9;border-radius:8px;font-size:.9rem}
+@media (max-width:520px){ .day{grid-template-columns:4.2rem 1fr} .date{font-size:1.1rem} .save{padding:10px 12px} }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>行事予定をGoogleカレンダーへ<span id="trial"></span><small id="note"></small></h1>
+  <div class="tabbar"><div class="tabs" id="tabs" role="tablist"></div><a class="tt" id="ttLink" href="jikanwari.html">時間割 →</a></div>
+  <div class="tools">
+    <span class="tools-label">表示中の月の予定を、まとめて選ぶ</span>
+    <button class="chip" data-sel="all">すべて選ぶ</button>
+    <button class="chip k-m" data-sel="m">会議だけ</button>
+    <button class="chip k-e" data-sel="e">行事だけ</button>
+    <button class="chip k-s" data-sel="s">提出だけ</button>
+    <button class="chip off" data-sel="none">選択を外す</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <section class="dest" id="dest" hidden>
+    <h2>自分のGoogleカレンダーに登録する</h2>
+    <div id="signedOut">
+      <button class="login" id="login"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Googleでログイン</button>
+    </div>
+    <div id="signedIn" hidden>
+      <p>ログイン中：<b id="who"></b>　<button class="linkbtn" id="switch">別のアカウントにする</button></p>
+      <p style="font-size:.9rem">種類ごとに、登録先のカレンダーを選べます。</p>
+      <div class="line"><span class="tag e">行事</span><select id="to-e"></select></div>
+      <div class="line"><span class="tag m">会議</span><select id="to-m"></select></div>
+      <div class="line"><span class="tag s">提出</span><select id="to-s"></select></div>
+    </div>
+    <p class="warn" id="inapp" hidden>LINE などのアプリの中で開いているため、Googleにログインできません。画面右上（または右下）のメニューから「ブラウザで開く」を選んで、Safari や Chrome で開き直してください。</p>
+  </section>
+
+  <div id="list"></div>
+
+  <section class="save">
+    <button class="go" id="go" disabled>予定を選んでください</button>
+    <button class="go2" id="ics" hidden disabled>ログインできないときは .ics で保存</button>
+    <div id="msg" role="status"></div>
+    <a class="open" id="open2" hidden href="https://calendar.google.com/calendar/r/settings/export" target="_blank" rel="noopener">次に：Googleカレンダーの読み込み画面を開く</a>
+  </section>
+
+  <section class="sub">
+    <h2>カレンダーを「購読」する<span id="acctNote"></span></h2>
+    <p>ボタンを押して「追加」を押すだけで、学校の予定がまとめて表示されます。<b>あとから増えた予定も、自動で表示されます。</b></p>
+    <div class="btns">
+      <a class="sbtn" target="_blank" rel="noopener" data-feed="all">すべて（行事・会議・提出）</a>
+      <a class="sbtn e" target="_blank" rel="noopener" data-feed="gyoji">行事だけ</a>
+      <a class="sbtn m" target="_blank" rel="noopener" data-feed="kaigi">会議だけ</a>
+      <a class="sbtn s" target="_blank" rel="noopener" data-feed="teishutsu">提出だけ</a>
+    </div>
+    <details>
+      <summary>ボタンでうまくいかないとき・注意</summary>
+      <ol style="margin:6px 0;padding-left:1.3em">
+        <li>パソコンで Googleカレンダーを開き、左の「他のカレンダー」の「＋」→「URL で追加」を押します。</li>
+        <li>下のどれかの URL をコピーして貼り付け、「カレンダーを追加」を押します。</li>
+      </ol>
+      すべて<code data-url="all"></code>行事<code data-url="gyoji"></code>会議<code data-url="kaigi"></code>提出<code data-url="teishutsu"></code>
+      <p>・購読したカレンダーは見るだけで、予定の書き換えはできません。<br>
+      ・予定の変更が反映されるまで、半日〜1日ほどかかります。<br>
+      ・スマホのカレンダーアプリでは追加できません。一度パソコンで追加すると、スマホにも表示されます（表示されないときは、アプリの設定でそのカレンダーの「同期」をオンにします）。<br>
+      ・このページで同じ予定を登録済みの場合は、予定が2つずつ表示されます。</p>
+    </details>
+  </section>
+
+  <div class="help">
+    <h2>使い方</h2>
+    <div class="api-only" hidden>
+    <h3>Googleにログインして、まとめて登録するとき（おすすめ・スマホもOK）</h3>
+    <ol>
+      <li>月を切り替えながら、入れたい予定にチェックを付けます。</li>
+      <li>「Googleでログイン」を押し、自分のアカウントを選びます。</li>
+      <li>初めてのときだけ「このアプリは Google で確認されていません」と出ます。「詳細」→「<span class="host"></span>（安全ではないページ）に移動」を押し、カレンダーへのアクセスに<b>すべてチェックを入れて</b>「続行」を押します。</li>
+      <li>種類ごとに登録先のカレンダーを選び、「カレンダーに登録する」を押します。</li>
+    </ol>
+    <p class="warn">同じ日に同じ名前の予定がすでにあれば、二重には登録しません。<br>
+      LINE やメールのアプリから開くとログインできないことがあります。そのときは Safari や Chrome で開き直してください。</p>
+    </div>
+    <h3>1件ずつ入れるとき</h3>
+    <ol>
+      <li>予定の右にある「追加」を押します。</li>
+      <li>Googleカレンダーの登録画面が開くので、右上の「保存」を押します。</li>
+    </ol>
+    <h3>まとめて入れるとき（パソコンで）</h3>
+    <ol>
+      <li>月を切り替えながら、入れたい予定にチェックを付けます。</li>
+      <li>「.ics ファイルで保存」を押します。ファイルがダウンロードされます。</li>
+      <li>下のボタンで、Googleカレンダーの読み込み画面を開きます。
+        <a class="open" href="https://calendar.google.com/calendar/r/settings/export" target="_blank" rel="noopener">Googleカレンダーの読み込み画面を開く</a>
+        <span style="font-size:.9rem">（自分で開くときは、Googleカレンダー右上の歯車 →「設定」→ 左の「インポート/エクスポート」）</span></li>
+      <li>「パソコンからファイルを選択」で、保存した .ics ファイルを選びます。</li>
+      <li>「カレンダーに追加」で入れ先のカレンダーを選び、「インポート」を押します。</li>
+    </ol>
+    <p class="warn">.ics ファイルをダブルクリックすると Outlook が開いてしまいます。必ず上の手順で読み込んでください。<br>
+      会議と行事を別のカレンダーに入れたいときは、「会議だけ」「行事だけ」で選んで、別々に保存・読み込みをします。<br>
+      同じファイルを同じカレンダーに2回読み込んでも、予定が二重になることはありません。</p>
+    <p style="margin:8px 0 0;font-size:.9rem">終了時刻が決まっていない会議は、仮に1時間で入れています。「選ぶ」ボタンは表示中の月に効きます。</p>
+  </div>
+  <p style="margin-top:16px;font-size:.85rem;text-align:center"><a href="privacy.html" style="color:var(--board-2)">プライバシーポリシー</a></p>
+</main>
+
+<script src="config.js"></script>
+<script src="events.js"></script>
+<script src="gyoji_core.js"></script>
+<script>
+const G = Gyoji, C = G.CONFIG, KIND = G.KIND, months = G.months; // EVENTS は events.js の変数をそのまま使う
+const CLIENT_ID = C.clientId; // 空なら .ics 保存だけの画面になる
+const IN_APP = /Line\/|FBAN|FBAV|Instagram|MicroMessenger|KAKAOTALK/i.test(navigator.userAgent);
+const API = !!CLIENT_ID;
+let token = null;
+const WD = ["日","月","火","水","木","金","土"];
+const {pad, yr, dt, lastOf, gcalUrl} = G;
+const $ = id => document.getElementById(id);
+
+document.title = `${C.short} 行事予定をカレンダーへ${C.trial}`;
+$("trial").textContent = C.trial;
+$("note").textContent = `${C.short}　${C.sourceNote}`;
+$("acctNote").textContent = C.accountNote;
+document.querySelectorAll(".host").forEach(x=>x.textContent = C.siteHost);
+if(!C.showJikanwari) $("ttLink").hidden = true;
+
+let cur = months[0];
+const tabs = $("tabs");
+months.forEach(m=>{
+  const b=document.createElement("button"); b.className="tab"; b.textContent=`${m}月`;
+  b.setAttribute("role","tab"); b.onclick=()=>{cur=m; show();}; b.dataset.m=m; tabs.appendChild(b);
+});
+const list = $("list");
+EVENTS.forEach((e,i)=>e.i=i);
+months.forEach(m=>{
+  const wrap=document.createElement("div"); wrap.className="month"; wrap.dataset.m=m;
+  const evs=EVENTS.filter(e=>e[0]===m);
+  [...new Set(evs.map(e=>e[1]))].sort((a,b)=>a-b).forEach(d=>{
+    const box=document.createElement("section"); box.className="day";
+    box.innerHTML=`<div class="date">${m}/${d}<span>(${WD[dt(m,d).getDay()]})</span></div><div class="items"></div>`;
+    const items=box.querySelector(".items");
+    evs.filter(e=>e[1]===d).forEach(e=>{
+      const time = e[3] ? `${e[3]}〜${e[4]}` : (e[7] ? `終日（〜${e[7]}）` : "終日");
+      const memo = e[6] && !e[7] ? `（${e[6]}）` : "";
+      const row=document.createElement("div"); row.className="row";
+      row.innerHTML=`<input type="checkbox" id="c${e.i}" data-i="${e.i}" data-k="${e[5]}">
+        <label for="c${e.i}"><span class="tag ${e[5]}">${KIND[e[5]]}</span><span class="title"></span>
+        <span class="meta"></span></label>
+        <a class="add" target="_blank" rel="noopener" href="${gcalUrl(e)}">追加</a>`;
+      row.querySelector(".title").textContent = e[2];
+      row.querySelector(".meta").textContent = time + memo;
+      items.appendChild(row);
+    });
+    wrap.appendChild(box);
+  });
+  list.appendChild(wrap);
+});
+
+const boxesIn = m => [...document.querySelectorAll(`.month[data-m="${m}"] input`)];
+const allBoxes = () => [...document.querySelectorAll("#list input")];
+const go = $("go"), msg = $("msg");
+function show(){
+  document.querySelectorAll(".month").forEach(x=>x.hidden = +x.dataset.m!==cur);
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", +x.dataset.m===cur));
+  refresh();
+}
+const icsBtn = $("ics"), open2 = $("open2");
+let busy = false;
+function refresh(){
+  const n = allBoxes().filter(b=>b.checked).length;
+  if(busy) return;
+  go.disabled = n===0; icsBtn.disabled = n===0; icsBtn.hidden = !API || !!token;
+  if(!n) go.textContent = "予定を選んでください";
+  else if(!API) go.textContent = `選んだ${n}件を .ics ファイルで保存`;
+  else if(!token) go.textContent = `Googleでログインして、選んだ${n}件を登録する`;
+  else go.textContent = `選んだ${n}件をカレンダーに登録する`;
+}
+function say(text, ng){ msg.className = ng ? "ng" : ""; msg.textContent = text; }
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  const s=c.dataset.sel; boxesIn(cur).forEach(b=>b.checked = s==="all" || b.dataset.k===s); refresh(); });
+list.addEventListener("change",()=>{ say(""); open2.hidden = true; refresh(); });
+show();
+
+// ---- 購読用のURL ----
+const FEED_BASE = C.siteHost + "/feeds/";
+document.querySelectorAll("[data-feed]").forEach(a=>{
+  a.href = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent("webcal://" + FEED_BASE + a.dataset.feed + ".ics");
+});
+document.querySelectorAll("[data-url]").forEach(c=>c.textContent = "https://" + FEED_BASE + c.dataset.url + ".ics");
+
+// ---- .ics の書き出し ----
+const selected = () => allBoxes().filter(b=>b.checked).map(b=>EVENTS[+b.dataset.i]);
+function saveIcs(){
+  const evs = selected();
+  const blob = new Blob([G.buildIcs(evs)], {type:"text/calendar;charset=utf-8"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = G.fileName(evs);
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  say(`「${a.download}」を保存しました。下のボタンから Googleカレンダーに読み込んでください。`);
+  open2.href = "https://calendar.google.com/calendar/r/settings/export";
+  open2.textContent = "次に：Googleカレンダーの読み込み画面を開く";
+  open2.hidden = false;
+}
+icsBtn.onclick = saveIcs;
+go.onclick = ()=>{
+  if(!API) return saveIcs();
+  if(!token){ pendingLogin = true; return login(); }
+  register();
+};
+// ---- Googleにログインして直接登録 ----
+const CAL = "https://www.googleapis.com/calendar/v3";
+const SCOPES = ["https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar.app.created"];
+let tokenClient = null, cals = [], pendingLogin = false;
+
+if(API){
+  $("dest").hidden = false; icsBtn.hidden = false;
+  document.querySelectorAll(".api-only").forEach(x=>x.hidden=false);
+  if(IN_APP){ $("inapp").hidden = false; $("login").disabled = true; }
+  refresh();
+}
+window.gisLoaded = ()=>{
+  if(!API) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPES.join(" "),
+    callback: async r=>{
+      if(r.error){ say("ログインできませんでした：" + r.error, true); return; }
+      if(!google.accounts.oauth2.hasGrantedAllScopes(r, ...SCOPES)){
+        say("カレンダーへのアクセスが一部しか許可されていません。もう一度ログインして、すべてにチェックを入れてください。", true); return;
+      }
+      token = r.access_token;
+      try{ await loadCals(); }catch(err){ say(err.message, true); return; }
+      if(pendingLogin){ pendingLogin = false; say("ログインしました。登録先のカレンダーを確かめて、もう一度ボタンを押してください。");
+        $("dest").scrollIntoView({behavior:"smooth", block:"center"}); }
+      refresh();
+    },
+    error_callback: e=>{ if(e.type!=="popup_closed") say("ログイン画面を開けませんでした。ポップアップを許可するか、Safari や Chrome で開き直してください。", true); }
+  });
+};
+function login(prompt){
+  if(IN_APP){ say("アプリの中ではログインできません。Safari や Chrome で開き直してください。", true); return; }
+  if(!tokenClient){ say("ログインの準備中です。数秒たってから、もう一度押してください。", true); return; }
+  tokenClient.requestAccessToken(prompt ? {prompt} : {});
+}
+$("login").onclick = ()=>login();
+$("switch").onclick = ()=>{ if(token) google.accounts.oauth2.revoke(token, ()=>{}); token=null; showSignedIn(false); refresh(); login("select_account"); };
+function showSignedIn(on){ $("signedIn").hidden = !on; $("signedOut").hidden = on; }
+
+async function api(path, opt={}){
+  const res = await fetch(CAL + path, {method: opt.method || "GET",
+    headers: {Authorization: "Bearer " + token, "Content-Type": "application/json"},
+    body: opt.body ? JSON.stringify(opt.body) : undefined});
+  if(res.status===401){ token=null; showSignedIn(false); refresh(); throw new Error("ログインの有効期限が切れました。もう一度ログインしてください。"); }
+  const data = res.status===204 ? {} : await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("エラー " + res.status));
+  return data;
+}
+async function loadCals(){
+  const r = await api("/users/me/calendarList?minAccessRole=writer&maxResults=250");
+  const items = r.items || [];
+  const primary = items.find(c=>c.primary);
+  cals = [...(primary ? [primary] : []), ...items.filter(c=>!c.primary)];
+  $("who").textContent = primary ? primary.id : "";
+  ["e","m","s"].forEach(k=>{
+    const sel = $("to-"+k), before = sel.value; sel.innerHTML = "";
+    cals.forEach(c=>sel.add(new Option(c.primary ? `${c.summaryOverride||c.summary}（メイン）` : (c.summaryOverride||c.summary), c.id)));
+    const name = C.short + " " + KIND[k], same = cals.find(c=>c.summary===name);
+    if(!same) sel.add(new Option(`新しく作る「${name}」`, "new:" + name));
+    sel.value = same ? same.id : (cals.some(c=>c.id===before) ? before : (cals[0] ? cals[0].id : "new:" + name));
+  });
+  showSignedIn(true);
+}
+const isoDate = (y,m,d) => `${y}-${pad(m)}-${pad(d)}`;
+const dayAfter = (m,d) => { const x=dt(m,d); x.setDate(x.getDate()+1); return isoDate(x.getFullYear(), x.getMonth()+1, x.getDate()); };
+function body(e){
+  const day = isoDate(yr(e[0]), e[0], e[1]);
+  const b = {summary: e[2]};
+  if(e[6]) b.description = e[6];
+  if(G.place(e)) b.location = G.place(e);
+  if(e[3]){
+    b.start = {dateTime: `${day}T${e[3]}:00`, timeZone: "Asia/Tokyo"};
+    b.end   = {dateTime: `${day}T${e[4]}:00`, timeZone: "Asia/Tokyo"};
+  }else{
+    const [mm,dd] = e[7] ? lastOf(e) : [e[0], e[1]];
+    b.start = {date: day}; b.end = {date: dayAfter(mm,dd)}; b.transparency = "transparent";
+  }
+  return b;
+}
+async function register(){
+  const evs = selected();
+  const dest = {e: $("to-e").value, m: $("to-m").value, s: $("to-s").value};
+  busy = true; go.disabled = true; icsBtn.disabled = true; open2.hidden = true; say("");
+  const ids = {};
+  async function calFor(k){
+    const key = dest[k];
+    if(ids[key]) return ids[key];
+    let id = key;
+    if(key.startsWith("new:")){
+      const name = key.slice(4), found = cals.find(c=>c.summary===name);
+      id = found ? found.id : (await api("/calendars", {method:"POST", body:{summary:name, timeZone:"Asia/Tokyo"}})).id;
+    }
+    return ids[key] = id;
+  }
+  let added = 0, skipped = 0;
+  try{
+    for(const e of evs){
+      go.textContent = `登録しています… ${added+skipped+1}/${evs.length}`;
+      const id = await calFor(e[5]);
+      const day = isoDate(yr(e[0]), e[0], e[1]);
+      const q = new URLSearchParams({timeMin:`${day}T00:00:00+09:00`, timeMax:`${dayAfter(e[0],e[1])}T00:00:00+09:00`, singleEvents:"true", maxResults:"250"});
+      const ex = await api(`/calendars/${encodeURIComponent(id)}/events?${q}`);
+      if((ex.items||[]).some(x=>x.summary===e[2])){ skipped++; continue; }
+      await api(`/calendars/${encodeURIComponent(id)}/events`, {method:"POST", body: body(e)});
+      added++;
+    }
+    say(`${added}件を登録しました。` + (skipped ? `${skipped}件は登録済みだったので入れていません。` : ""));
+    open2.href = "https://calendar.google.com/calendar/r"; open2.textContent = "Googleカレンダーを開いて確かめる"; open2.hidden = false;
+    allBoxes().forEach(b=>b.checked=false);
+  }catch(err){
+    say(`${added}件を登録したところで止まりました：${err.message}`, true);
+  }finally{
+    busy = false;
+    if(token) await loadCals().catch(()=>{});
+    refresh();
+  }
+}
+</script>
+<script>if(API){ const s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.onload=()=>gisLoaded(); document.head.appendChild(s); }</script>
+</body>
+</html>
